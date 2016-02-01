@@ -1,0 +1,16 @@
+
+hdr
+"PROTOSTR"      //magic, 8 bytes
+offset_t file_len   //file size, sanity check
+offset_t header_off //offset to proto header
+offset_t first_kfr  //offset to first keyframe
+offset_t kfr_count  //count of keyframes in file
+uint32_t frames_per_keyframe
+
+
+kf_kdr
+offset_t kf_num
+offset_t delta_start
+offset_t skiplist[skiplist_height]
+uint32_t kf_size
+
