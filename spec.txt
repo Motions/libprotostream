@@ -1,0 +1,19 @@
+File header:
+"PROTOSTR"      //magic, 8 bytes
+byte[min(0, offset_size-8)] padding
+offset_t file_len   //file size, sanity check
+offset_t header_off //offset to proto header
+offset_t first_kfr  //offset to first keyframe
+offset_t kfr_count  //count of keyframes in file
+uint32_t frames_per_keyframe
+byte[4] reserved
+
+
+Keyframe header
+offset_t kf_num
+offset_t delta_start
+offset_t skiplist[skiplist_height]  //skiplist[0] -> kf_num + 1, skiplist[1] -> kf_num + 2 ...
+uint32_t kf_size
+
+Delta header
+uint16_t size   //TODO 65k should be enough?
