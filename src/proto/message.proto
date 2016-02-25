@@ -1,0 +1,39 @@
+message Point {
+  optional int32 x = 1;
+  optional int32 y = 2;
+  optional int32 z = 3;
+}
+
+message Delta {
+  optional Point from = 1;
+  //^previous position of moved atom
+
+  optional Point disp = 2;
+  //^displacement vector
+}
+
+message Keyframe {
+  optional int32 binder_types_count = 1;
+  //^number of possible binder_types
+
+  optional int32 radius = 2;
+
+  message Binder {
+    optional int32 binder_type = 1;
+    optional Point position = 2;
+  }
+  repeated Binder binders = 3;
+
+  message Chain {
+    message Bead {
+      message Binding {
+        optional int32 binder_type = 1;
+        optional int32 force = 2;
+      }
+      repeated Binding energy_vector = 1;
+      optional Point position = 2;
+    }
+    repeated Bead beads = 1;
+  }
+  repeated Chain chains = 4;
+}
