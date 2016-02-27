@@ -36,10 +36,6 @@ class stream_base {
         header_proto_size(0)
     {
     }
-    virtual ~stream_base() {
-        if(fd != -1)
-            close(fd);
-    }
     static inline offset_t kfhdr_read_skiplist(const void *buf, uint8_t i){
         //return readbuf_aligned<offset_t>((uint8_t*)buf + sizeof(offset_t) * (2 + i));
         return readbuf_unaligned<offset_t>((uint8_t*)buf + sizeof(offset_t) * (2 + i));
@@ -101,7 +97,12 @@ class stream_base {
     inline bool has_kf_offset(offset_t n) {
         return keyframe_offsets.count(n) == 1;
     }
+    virtual void find_keyframe(offset_t n) = 0;
     public:
+    virtual ~stream_base() {
+        if(fd != -1)
+            close(fd);
+    }
     virtual int open(const char *path) {
         if(mode == open_mode::READ_WRITE)
             fd = ::open(path, O_RDWR | O_CREAT | O_EXCL, 0666);
@@ -112,7 +113,6 @@ class stream_base {
         else
             return -1;
     }
-    virtual void find_keyframe(offset_t n) = 0;
     inline offset_t offset_for_kf(offset_t n) {
         if(!keyframe_offsets.count(n))
             find_keyframe(n);
