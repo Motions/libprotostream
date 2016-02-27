@@ -7,9 +7,9 @@ set (SOURCES
     stream_reader.cpp
     stream_writer.cpp
     mmap_reader.cpp
+    libprotostream_c.cpp
 )
 
 
-# static library for internal/test use
-add_library(protostream_static STATIC ${SOURCES})
-add_library(protostream SHARED ${SOURCES})
+add_library(protostream STATIC ${SOURCES})
+add_library(protostream_dyn SHARED ${SOURCES})
