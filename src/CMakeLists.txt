@@ -7,6 +7,7 @@ set (SOURCES
     stream_reader.cpp
     stream_writer.cpp
     mmap_reader.cpp
+    libprotostream.cpp
 )
 
 
