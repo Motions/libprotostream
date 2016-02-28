@@ -1,0 +1,424 @@
+#ifndef _STREAM_H
+#define _STREAM_H
+
+#include "common.h"
+#include "header.h"
+#include "utils.h"
+
+#include <cassert>
+
+#include <iterator>
+#include <memory>
+#include <type_traits>
+
+namespace protostream {
+
+namespace detail {
+/** A tag used to annotate `with_*` options */
+struct constraint {
+};
+
+/** Merges `with_*` options together */
+template<class... Args>
+struct options_handler : public Args ... {
+    static_assert(conjunction<std::is_base_of<constraint, Args>...>::value, "Some arguments are illegal");
+};
+}
+
+template<class Backend>
+struct with_backend : detail::constraint {
+    using backend_type = Backend;
+};
+
+template<template<class> class Cache>
+struct with_cache : detail::constraint {
+    template<class Backend>
+    using cache_type = Cache<Backend>;
+};
+
+/** Sets the proto header factory.
+ *
+ * The factory should provide the following members:
+ *   * using type = ...
+ *       representing the return type of the factory
+ *   * static type build(pointer_type ptr, std::size_t len)
+ *       where pointer_type is defined as backend_type::pointer_type
+ */
+template<class ProtoHeaderFactory>
+struct with_proto_header_factory : detail::constraint {
+    using proto_header_factory_type = ProtoHeaderFactory;
+};
+
+/** Sets the keyframe factory. See `with_proto_header_factory` */
+template<class KeyframeFactory>
+struct with_keyframe_factory : detail::constraint {
+    using keyframe_factory_type = KeyframeFactory;
+};
+
+/** Sets the delta factory. See `with_proto_header_factory` */
+template<class DeltaFactory>
+struct with_delta_factory : detail::constraint {
+    using delta_factory_type = DeltaFactory;
+};
+
+struct default_factory {
+    template<class Pointer>
+    static auto build(Pointer &&ptr, std::size_t length) {
+        return std::make_pair(std::forward<Pointer>(ptr), length);
+    }
+};
+
+template<class... Args>
+class stream : public detail::options_handler<Args...> {
+public:
+    using typename detail::options_handler<Args...>::backend_type;
+    using cache_type = typename detail::options_handler<Args...>::template cache_type<backend_type>;
+    using typename detail::options_handler<Args...>::proto_header_factory_type;
+    using typename detail::options_handler<Args...>::keyframe_factory_type;
+    using typename detail::options_handler<Args...>::delta_factory_type;
+    using pointer_type = typename backend_type::pointer_type;
+    using proto_header_type = typename proto_header_factory_type::type;
+    using keyframe_type = typename keyframe_factory_type::type;
+    using delta_type = typename delta_factory_type::type;
+
+    /** Opens the file and reads the header from it */
+    stream(const char *path);
+
+    /** Opens the file and writes a new header to it */
+    stream(const char *path, std::uint32_t frames_per_kf, void *proto_header, std::size_t proto_header_size);
+
+    stream(const stream &) = delete;
+
+    stream(stream &&) = default;
+
+    stream &operator=(const stream &) = delete;
+
+    stream &operator=(stream &&) = default;
+
+    proto_header_type get_proto_header() const {
+        const auto size = header.kf0_offset - header.proto_header_offset;
+        return proto_header_factory_type::build(backend.read(header.proto_header_offset, size), size);
+    }
+
+    class keyframe_iterator;
+
+    class delta_iterator;
+
+    class delta_data {
+    public:
+        using size_type = std::uint16_t;
+
+        delta_type get() const {
+            return delta_factory_type::build(raw(), size());
+        }
+
+        bool operator==(const delta_data &that) const {
+            return &str == &that.str && frame_id == that.frame_id;
+        }
+
+        bool operator!=(const delta_data &that) const {
+            return !(*this == that);
+        }
+
+        size_type size() const {
+            return str.backend.template read_num<size_type>(offset);
+        }
+
+        pointer_type raw() const {
+            return str.backend.read(offset + sizeof(size_type), size());
+        }
+
+    private:
+        const stream &str;
+        offset_t offset;
+        keyframe_id_t frame_id;
+
+        delta_data(const stream &str, offset_t offset, keyframe_id_t frame_id) : str{str}, offset{offset},
+                                                                                 frame_id{frame_id} { }
+
+        friend class delta_iterator;
+    };
+
+    class delta_iterator : std::iterator<std::forward_iterator_tag, delta_data> {
+    public:
+        delta_data operator*() const {
+            return data;
+        }
+
+        delta_data *operator->() const {
+            return &data;
+        }
+
+        delta_iterator &operator++() {
+            data.offset += sizeof(typename delta_data::size_type) + data.size();
+            data.frame_id++;
+            return *this;
+        }
+
+        delta_iterator operator++(int) {
+            auto tmp = *this;
+            ++*this;
+            return tmp;
+        }
+
+        bool operator==(const delta_iterator &that) const {
+            return data == that.data;
+        }
+
+        bool operator!=(const delta_iterator &that) const {
+            return !(*this == that);
+        }
+
+    private:
+        delta_iterator(const stream &str, offset_t offset, keyframe_id_t frame_id)
+                : data{str, offset, frame_id} { }
+
+        delta_data data;
+
+        friend class stream::keyframe_data;
+    };
+
+    class keyframe_data {
+    public:
+        keyframe_type get() const {
+            return keyframe_factory_type::build(raw(), size());
+        }
+
+        delta_iterator begin() const {
+            return {str, header().delta_offset, id() * str.header.frames_per_kf + 1};
+        }
+
+        delta_iterator end() const {
+            return {str, 0, std::min(str.header.frame_count.value, (id() + 1) * str.header.frames_per_kf.value)};
+        }
+
+        bool operator==(const keyframe_data &that) const {
+            return &str == &that.str && offset == that.offset;
+        }
+
+        bool operator!=(const keyframe_data &that) const {
+            return !(*this == that);
+        }
+
+        pointer_type raw() const {
+            return str.backend.read(offset + reduced_keyframe_header::size, size());
+        }
+
+        std::size_t size() const {
+            return header().kf_size;
+        }
+
+        keyframe_id_t id() const {
+            return header().kf_num;
+        }
+
+    private:
+        keyframe_data(const stream &str, offset_t offset) : str{str}, offset{offset} { }
+
+        const stream &str;
+        offset_t offset;
+
+        auto header() const {
+            return str.cache.header_at(offset);
+        }
+
+        friend class stream;
+
+        friend class keyframe_iterator;
+    };
+
+    class keyframe_iterator : std::iterator<std::forward_iterator_tag, keyframe_data> {
+    public:
+        keyframe_data operator*() const {
+            return data;
+        }
+
+        keyframe_data *operator->() const {
+            return &data;
+        }
+
+        keyframe_iterator &operator++() {
+            data.offset = link(0);
+            return *this;
+        }
+
+        keyframe_iterator operator++(int) {
+            auto tmp = *this;
+            ++*this;
+            return tmp;
+        }
+
+        keyframe_iterator &operator+=(keyframe_id_t diff) {
+            static_assert(std::is_unsigned<decltype(diff)>{}, "Keyframe diff is not unsigned");
+
+            if (auto offset_opt = data.str.cache.offset_of(data.id() + diff)) {
+                data.offset = offset_opt.value();
+            }
+            else {
+                for (unsigned level = reduced_keyframe_header::skiplist_height - 1; diff > 0; level--) {
+                    while (diff >= (1u << level)) {
+                        diff -= 1u << level;
+                        data.offset = link(level);
+                    }
+                }
+
+                assert(diff == 0);
+            }
+
+            return *this;
+        }
+
+        keyframe_iterator operator+(keyframe_id_t diff) const {
+            auto tmp = *this;
+            return tmp += diff;
+        }
+
+        bool operator==(const keyframe_iterator &that) const {
+            return data == that.data;
+        }
+
+        bool operator!=(const keyframe_iterator &that) const {
+            return !(*this == that);
+        }
+
+        delta_iterator begin() const {
+            return {data.str, data.header().delta_offset, data.id() * data.str.header.frames_per_kf + 1};
+        }
+
+        delta_iterator end() const {
+            return {data.str, 0, std::min(data.str.header.frame_count.value,
+                                          (data.id() + 1) * data.str.header.frames_per_kf.value)};
+        }
+
+    private:
+        keyframe_iterator(const stream &str, offset_t offset)
+                : data{str, offset} {
+        }
+
+        offset_t link(unsigned level) const {
+            return data.str.cache.link_at(data.offset, level);
+        }
+
+        keyframe_data data;
+
+        friend class stream;
+    };
+
+    keyframe_iterator begin() const {
+        return {*this, header.kf0_offset};
+    }
+
+    keyframe_iterator end() const {
+        return {*this, 0};
+    }
+
+    void append_delta(std::uint8_t *data, delta_size_t size) {
+        assert(header.frame_count % header.frames_per_kf != 0);
+
+        const auto offset = backend.size();
+        backend.write_num(offset, size);
+        backend.write(offset + sizeof(delta_size_t), size, data);
+
+        header.frame_count.value++;
+        header.file_size.value += sizeof(delta_size_t) + size;
+        header.write(backend, 0);
+    }
+
+    void append_keyframe(std::uint8_t *data, std::size_t size) {
+        assert(header.frame_count % header.frames_per_kf == 0);
+
+        const auto offset = backend.size();
+        const auto id = header.keyframe_count.value;
+
+        reduced_keyframe_header hdr = {
+                .kf_num = id, .delta_offset = offset + reduced_keyframe_header::size + size, .kf_size = size
+        };
+        hdr.write(backend, offset);
+
+        backend.write(offset + reduced_keyframe_header::size, size, data);
+
+        update_links_to(id, offset);
+
+        header.frame_count.value++;
+        header.keyframe_count.value++;
+        header.file_size.value += reduced_keyframe_header::size + size;
+
+        header.write(backend, 0);
+    }
+
+private:
+    backend_type backend;
+    mutable cache_type cache;
+    file_header header;
+
+    void update_links_to(keyframe_id_t keyframe_id, offset_t offset) {
+        int level = reduced_keyframe_header::skiplist_height - 1;
+        while (level >= 0 && keyframe_id < (1u << level)) {
+            --level;
+        }
+
+        if (level < 0) {
+            return;
+        }
+
+        auto it = begin() + (keyframe_id - (1u << level));
+        while (level >= 0) {
+            backend.write_num(it.data.offset + reduced_keyframe_header::skiplist_offset(level), offset);
+
+            level--;
+            if (level >= 0) {
+                it += 1 << level;
+            }
+        }
+    }
+};
+
+template<class... Args>
+stream<Args...>::stream(const char *path)
+        : backend{path}, cache{backend}, header{file_header::read(backend, 0)} {
+    const auto file_size = backend.size();
+
+    if (header.file_size != file_size) {
+        throw std::runtime_error("File size not consistent with data in header");
+    }
+
+    if (header.proto_header_offset > file_size - file_header::size) {
+        throw std::runtime_error("Invalid proto header offset");
+    }
+
+    if (header.kf0_offset > file_size - file_header::size) {
+        throw std::runtime_error("Invalid keyframe 0 offset");
+    }
+
+    if (header.proto_header_offset > header.kf0_offset) {
+        throw std::runtime_error("Proto header is placed after keyframe 0");
+    }
+}
+
+template<class... Args>
+stream<Args...>::stream(const char *path, std::uint32_t frames_per_kf, void *proto_header,
+                        std::size_t proto_header_size)
+        : backend{path}, cache{backend} {
+    auto end = file_header::size + proto_header_size;
+    header.file_size = end;
+    header.kf0_offset = end;
+    header.proto_header_offset = file_header::size;
+    header.frames_per_kf = frames_per_kf;
+    header.write(backend, 0);
+
+    backend.write(file_header::size, proto_header_size, static_cast<std::uint8_t *>(proto_header));
+}
+
+template<class... Args>
+auto begin(const stream<Args...> &stream) {
+    return stream.begin();
+}
+
+template<class... Args>
+auto end(const stream<Args...> &stream) {
+    return stream.end();
+}
+
+}
+
+#endif // _STREAM_H
