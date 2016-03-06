@@ -36,7 +36,7 @@ struct file_backend {
     template<class T>
     void write_num(offset_t offset, T value) {
         value = detail::htobe(value);
-        self()->write_small(offset, &value);
+        self()->write_small(offset, value);
     }
 
 private:
