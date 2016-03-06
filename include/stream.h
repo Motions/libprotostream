@@ -14,8 +14,7 @@ namespace protostream {
 
 namespace detail {
 /** A tag used to annotate `with_*` options */
-struct constraint {
-};
+struct constraint { };
 
 /** Merges `with_*` options together */
 template<class... Args>
