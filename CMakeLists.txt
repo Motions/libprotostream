@@ -9,7 +9,12 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -O2")
 
 add_subdirectory(include)
 
-#include_directories("${PROJECT_SOURCE_DIR}/include")
 add_executable(testmain test/testmain.cpp)
 target_link_libraries(testmain protostream)
+
+add_library(cprotostream SHARED src/cprotostream.cpp)
+target_link_libraries(cprotostream protostream)
+
+add_library(cprotostream_static STATIC src/cprotostream.cpp)
+target_link_libraries(cprotostream_static protostream)
 
