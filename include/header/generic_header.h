@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <tuple>
 
-namespace protostream{
+namespace protostream {
 namespace detail {
 
 namespace overlap_check {
@@ -23,8 +23,7 @@ template<class Field, class... Fields>
 struct check_one_to_many : check_pair<Field, Fields> ... { };
 
 template<class... Fields>
-struct check_all_pairs : check_one_to_many<Fields, Fields...> ... {
-};
+struct check_all_pairs : check_one_to_many<Fields, Fields...> ... { };
 
 }
 

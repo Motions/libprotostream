@@ -20,6 +20,13 @@ struct string_factory {
     }
 };
 
+using mmap_writer = stream<
+        with_backend<mmap_backend<file_mode_t::READ_APPEND>>,
+        with_cache<offsets_only_cache>,
+        with_keyframe_factory<string_factory>,
+        with_delta_factory<string_factory>,
+        with_proto_header_factory<string_factory>>;
+
 using stream_writer = stream<
         with_backend<posix_file_backend<file_mode_t::READ_APPEND>>,
         with_cache<full_cache>,
@@ -28,7 +35,7 @@ using stream_writer = stream<
         with_proto_header_factory<string_factory>>;
 
 using mmap_reader = stream<
-        with_backend<mmap_backend>,
+        with_backend<mmap_backend<file_mode_t::READ_ONLY>>,
         with_cache<offsets_only_cache>,
         with_keyframe_factory<string_factory>,
         with_delta_factory<string_factory>,
@@ -54,7 +61,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
         sscanf(argv[3], "%d", &n);
-        stream_writer wr(path, 2, argv[4], strlen(argv[4]));
+        mmap_writer wr(path, 2, argv[4], strlen(argv[4]));
         for (int i = 0; i < n; ++i) {
             char *line = nullptr;
             size_t tmp = 0;
