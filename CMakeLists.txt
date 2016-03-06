@@ -2,13 +2,14 @@ cmake_minimum_required(VERSION 2.8)
 
 project(libprotostream)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 
-add_subdirectory(src)
+add_subdirectory(include)
 
-include_directories("${PROJECT_SOURCE_DIR}/src")
+#include_directories("${PROJECT_SOURCE_DIR}/include")
 add_executable(testmain test/testmain.cpp)
-target_link_libraries(testmain protostream_static)
+target_link_libraries(testmain protostream)
 
