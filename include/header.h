@@ -22,6 +22,7 @@ struct kf0_offset : public detail::with_offset<offset_t, 8 * 3> { };
 struct keyframe_count : public detail::with_offset<offset_t, 8 * 4> { };
 struct frame_count : public detail::with_offset<offset_t, 8 * 5> { };
 struct frames_per_kf : public detail::with_offset<uint32_t, 8 * 6> { };
+struct reserved : public detail::placeholder<4, 8 * 7> { };
 
 }
 }
@@ -33,7 +34,8 @@ struct file_header : public detail::generic_header<file_header,
         fields::file_header::kf0_offset,
         fields::file_header::keyframe_count,
         fields::file_header::frame_count,
-        fields::file_header::frames_per_kf
+        fields::file_header::frames_per_kf,
+        fields::file_header::reserved
 > { };
 
 namespace fields {
