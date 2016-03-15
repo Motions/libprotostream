@@ -1,3 +1,10 @@
 #pragma once
 
 #cmakedefine HAVE_MREMAP 1
+#cmakedefine HAVE_ENDIAN_H 1
+#cmakedefine HAVE_MACHINE_ENDIAN_H 1
+#cmakedefine HAVE_SYS_ENDIAN_H 1
+#cmakedefine HAVE_KERN_OSBYTEORDER_H 1
+#cmakedefine HAVE_FALLOCATE 1
+#cmakedefine HAVE_POSIX_FALLOCATE 1
+#cmakedefine HAVE_F_PREALLOCATE 1

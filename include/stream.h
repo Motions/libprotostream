@@ -277,7 +277,7 @@ public:
             static_assert(std::is_unsigned<decltype(diff)>{}, "Keyframe diff is not unsigned");
 
             if (auto offset_opt = data.str.cache.offset_of(data.id() + diff)) {
-                data.offset = offset_opt.value();
+                data.offset = *offset_opt;
             }
             else {
                 for (auto level = fields::skiplist_height - 1; diff > 0; level--) {
