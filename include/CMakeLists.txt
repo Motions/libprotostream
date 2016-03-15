@@ -2,6 +2,17 @@ cmake_minimum_required(VERSION 2.8)
 
 include(CheckFunctionExists)
 CHECK_FUNCTION_EXISTS(mremap HAVE_MREMAP)
+
+include(CheckIncludeFile)
+CHECK_INCLUDE_FILE("endian.h" HAVE_ENDIAN_H)
+CHECK_INCLUDE_FILE("machine/endian.h" HAVE_MACHINE_ENDIAN_H)
+CHECK_INCLUDE_FILE("sys/endian.h" HAVE_SYS_ENDIAN_H)
+CHECK_INCLUDE_FILE("libkern/OSByteOrder.h" HAVE_KERN_OSBYTEORDER_H)
+
+include(CheckSymbolExists)
+CHECK_SYMBOL_EXISTS(be64toh "sys/endian.h" HAVE_BE64TOH)
+CHECK_SYMBOL_EXISTS(betoh64 "sys/endian.h" HAVE_BETOH64)
+
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 add_library(protostream INTERFACE)
