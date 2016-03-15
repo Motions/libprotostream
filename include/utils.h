@@ -1,6 +1,34 @@
 #pragma once
 
-#include <endian.h>
+#include "config.h"
+
+#ifdef HAVE_ENDIAN_H
+#   include <endian.h>
+#endif
+
+#ifdef HAVE_MACHINE_ENDIAN_H
+#   include <machine/endian.h>
+#endif
+
+#ifdef HAVE_SYS_ENDIAN_H
+#   include <sys/endian.h>
+#   if defined(HAVE_BETOH64) and not defined(HAVE_BE64TOH)
+#       define be64toh(x) betoh64(x)
+#       define be32toh(x) betoh32(x)
+#       define be16toh(x) betoh16(x)
+#   endif
+#endif
+
+#ifdef HAVE_KERN_OSBYTEORDER_H
+#   include <libkern/OSByteOrder.h>
+#   define be64toh(x) OSSwapBigToHostInt64(x)
+#   define be32toh(x) OSSwapBigToHostInt32(x)
+#   define be16toh(x) OSSwapBigToHostInt16(x)
+#   define htobe64(x) OSSwapHostToBigInt64(x)
+#   define htobe32(x) OSSwapHostToBigInt32(x)
+#   define htobe16(x) OSSwapHostToBigInt16(x)
+#endif
+
 #include <unistd.h>
 #include <cstdlib>
 #include <cstdio>
