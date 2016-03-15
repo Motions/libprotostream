@@ -4,6 +4,7 @@
 #include "file_backend.h"
 #include "posix_file_handler.h"
 
+#include <fcntl.h>
 #include <sys/mman.h>
 
 namespace protostream {
@@ -72,7 +73,7 @@ private:
     std::size_t used_size, file_size;
     std::uint8_t* buffer;
 
-    void check_expand(offset_t new_end);
+    void check_expand(std::size_t new_end);
 
     void do_mmap() {
         if (file_size == 0) {
@@ -93,16 +94,19 @@ private:
     }
 
     void do_munmap() {
+        if (!buffer) {
+            return;
+        }
+
         if (munmap(buffer, file_size)) {
             throw std::system_error(errno, std::system_category(), "munmap");
         }
         buffer = nullptr;
     }
 
-#ifdef HAVE_MREMAP
-
-    /** Expands the mapping to new_size, sets file_size to new_size */
+    /** Expands the mapping to `new_size`, sets `file_size` to `new_size` */
     void do_mremap(std::size_t new_size) {
+#ifdef HAVE_MREMAP
         if (file_size == 0) {
             file_size = new_size;
             do_mmap();
@@ -115,13 +119,41 @@ private:
             buffer = static_cast<std::uint8_t*>(buf);
             file_size = new_size;
         }
+#else
+        do_munmap();
+        file_size = new_size;
+        do_mmap();
+#endif
     }
 
+    /** Expands the backing file by `expand_by` */
+    void do_fallocate(std::size_t expand_by) {
+#if defined(HAVE_FALLOCATE)
+        if(fallocate(file.fd, 0, file_size, expand_by) != 0) {
+            throw std::system_error(errno, std::system_category(), "fallocate");
+        }
+#elif defined(HAVE_POSIX_FALLOCATE)
+        if(auto ret = posix_fallocate(file.fd, file_size, expand_by)) {
+            throw std::system_error(ret, std::system_category(), "posix_fallocate");
+        }
+#elif defined(HAVE_F_PREALLOCATE)
+        fstore_t store{F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, static_cast<off_t>(expand_by), 0};
+        if(fcntl(file.fd, F_PREALLOCATE, &store) == -1) {
+            throw std::system_error(errno, std::system_category(), "fcntl");
+        }
+#else
+        char buf[] = {0};
+        switch(auto ret = pwrite(file.fd, buf, 1, file_size + expand_by)) {
+            case 1: return;
+            case -1: throw std::system_error(errno, std::system_category(), "pwrite");
+            default: throw std::runtime_error("Write returned " + std::to_string(ret));
+        }
 #endif
+    }
 };
 
 template<>
-inline void mmap_backend<file_mode_t::READ_APPEND>::check_expand(offset_t new_end) {
+inline void mmap_backend<file_mode_t::READ_APPEND>::check_expand(std::size_t new_end) {
     if (new_end < file_size) {
         used_size = std::max(new_end, used_size);
         return;
@@ -134,18 +166,8 @@ inline void mmap_backend<file_mode_t::READ_APPEND>::check_expand(offset_t new_en
     expand_by /= expansion_granularity;
     expand_by *= expansion_granularity;
 
-    if (auto ret = posix_fallocate(file.fd, file_size, expand_by)) {
-        throw std::system_error(ret, std::system_category(), "posix_fallocate");
-    }
-
-#ifdef HAVE_MREMAP
+    do_fallocate(expand_by);
     do_mremap(file_size + expand_by);
-#else
-    do_munmap();
-    file_size += expand_by;
-    do_mmap();
-#endif
-
     used_size = new_end;
 }
 
