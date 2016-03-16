@@ -52,7 +52,7 @@ public:
 
             if (link_offset != no_keyframe) {
                 if (link_offset <= offset) {
-                    throw std::runtime_error("Back link found");
+                    throw std::runtime_error{"Back link found"};
                 }
 
                 offsets.emplace(header.template get<fields::kf_num>() + (1 << i), link_offset);

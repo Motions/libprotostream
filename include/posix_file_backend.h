@@ -67,13 +67,12 @@ template<file_mode_t mode>
 void posix_file_backend<mode>::read_impl(offset_t offset, size_t length, std::uint8_t* into) const {
     size_t count = 0;
     while (count < length) {
-        ssize_t ret;
-        ret = pread(file.fd, into + count, length - count, offset + count);
+        auto ret = pread(file.fd, into + count, length - count, offset + count);
 
         if (ret == 0) {
-            throw std::logic_error("Premature end of file");
+            throw std::logic_error{"Premature end of file"};
         } else if (ret < 0) {
-            throw std::system_error(errno, std::system_category(), "pread");
+            throw std::system_error{errno, std::system_category(), "pread"};
         }
 
         count += ret;
@@ -89,7 +88,7 @@ void posix_file_backend<file_mode_t::READ_APPEND>::write_impl(offset_t offset, s
         ret = pwrite(file.fd, from + count, length - count, offset + count);
 
         if (ret < 0) {
-            throw std::system_error(errno, std::system_category(), "pwrite");
+            throw std::system_error{errno, std::system_category(), "pwrite"};
         }
 
         count += ret;

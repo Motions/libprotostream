@@ -14,13 +14,13 @@ using hstream = stream<
         with_proto_header_factory<default_factory<std::uint8_t*>>>;
 
 HStream* protostream_open_existing(const char* path) noexcept {
-    auto ptr = new hstream(path);
+    auto ptr = new hstream{path};
     return reinterpret_cast<HStream*>(ptr);
 }
 
 HStream* protostream_open_new(const char* path, uint32_t frames_per_kf,
                               const void* proto_header, size_t proto_header_size) noexcept {
-    auto ptr = new hstream(path, frames_per_kf, proto_header, proto_header_size);
+    auto ptr = new hstream{path, frames_per_kf, proto_header, proto_header_size};
     return reinterpret_cast<HStream*>(ptr);
 }
 
@@ -48,7 +48,7 @@ void protostream_free_header(const void*) noexcept { }
 
 HKeyframeIterator* protostream_iter_keyframes(HStream* stream) noexcept {
     auto ptr = reinterpret_cast<hstream*>(stream);
-    auto iter = new hstream::keyframe_iterator(ptr->begin());
+    auto iter = new hstream::keyframe_iterator{ptr->begin()};
     return reinterpret_cast<HKeyframeIterator*>(iter);
 }
 
@@ -75,7 +75,7 @@ void protostream_free_keyframe_iterator(HKeyframeIterator* iterator) noexcept {
 
 HDeltaIterator* protostream_iter_deltas(HKeyframeIterator* keyframe) noexcept {
     auto ptr = reinterpret_cast<hstream::keyframe_iterator*>(keyframe);
-    auto iter = new hstream::delta_iterator((*ptr)->begin());
+    auto iter = new hstream::delta_iterator{(*ptr)->begin()};
     return reinterpret_cast<HDeltaIterator*>(iter);
 }
 

@@ -30,7 +30,7 @@ public:
     posix_file_handler(const char* path)
             : fd(open(path, detail::open_flags(mode), 0666)) {
         if (fd == -1) {
-            throw std::system_error(errno, std::system_category(), "open");
+            throw std::system_error{errno, std::system_category(), "open"};
         }
 
     }
@@ -51,7 +51,7 @@ public:
         struct stat st;
 
         if (fstat(fd, &st) != 0) {
-            throw std::system_error(errno, std::system_category(), "fstat");
+            throw std::system_error{errno, std::system_category(), "fstat"};
         }
 
         return st.st_size;
