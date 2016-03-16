@@ -88,7 +88,7 @@ private:
 
         auto buf = mmap(nullptr, file_size, mmap_prot, mmap_flags, file.fd, 0);
         if (buf == MAP_FAILED) {
-            throw std::system_error(errno, std::system_category(), "mmap");
+            throw std::system_error{errno, std::system_category(), "mmap"};
         }
         buffer = static_cast<std::uint8_t*>(buf);
     }
@@ -99,7 +99,7 @@ private:
         }
 
         if (munmap(buffer, file_size)) {
-            throw std::system_error(errno, std::system_category(), "munmap");
+            throw std::system_error{errno, std::system_category(), "munmap"};
         }
         buffer = nullptr;
     }
@@ -114,7 +114,7 @@ private:
         else {
             auto buf = mremap(buffer, file_size, new_size, MREMAP_MAYMOVE);
             if (buf == MAP_FAILED) {
-                throw std::system_error(errno, std::system_category(), "mremap");
+                throw std::system_error{errno, std::system_category(), "mremap"};
             }
             buffer = static_cast<std::uint8_t*>(buf);
             file_size = new_size;
@@ -130,23 +130,23 @@ private:
     void do_fallocate(std::size_t expand_by) {
 #if defined(HAVE_FALLOCATE)
         if (fallocate(file.fd, 0, file_size, expand_by) != 0) {
-            throw std::system_error(errno, std::system_category(), "fallocate");
+            throw std::system_error{errno, std::system_category(), "fallocate"};
         }
 #elif defined(HAVE_POSIX_FALLOCATE)
         if (auto ret = posix_fallocate(file.fd, file_size, expand_by)) {
-            throw std::system_error(ret, std::system_category(), "posix_fallocate");
+            throw std::system_error{ret, std::system_category(), "posix_fallocate"};
         }
 #elif defined(HAVE_F_PREALLOCATE)
         fstore_t store{F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, static_cast<off_t>(expand_by), 0};
         if (fcntl(file.fd, F_PREALLOCATE, &store) == -1) {
-            throw std::system_error(errno, std::system_category(), "fcntl");
+            throw std::system_error{errno, std::system_category(), "fcntl"};
         }
 #else
         char buf[] = {0};
         switch (auto ret = pwrite(file.fd, buf, 1, file_size + expand_by)) {
             case 1: return;
-            case -1: throw std::system_error(errno, std::system_category(), "pwrite");
-            default: throw std::runtime_error("Write returned " + std::to_string(ret));
+            case -1: throw std::system_error{errno, std::system_category(), "pwrite"};
+            default: throw std::runtime_error{"Write returned " + std::to_string(ret)};
         }
 #endif
     }

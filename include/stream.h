@@ -379,7 +379,7 @@ private:
     }
 
     void update_links_to(keyframe_id_t keyframe_id, offset_t offset) {
-        int level = fields::skiplist_height - 1;
+        auto level = static_cast<int>(fields::skiplist_height - 1);
         while (level >= 0 && keyframe_id < (1u << level)) {
             --level;
         }
@@ -406,19 +406,19 @@ stream<Args...>::stream(const char* path)
     const auto file_size = backend.size();
 
     if (header_field<fields::file_size>() != file_size) {
-        throw std::runtime_error("File size not consistent with data in header");
+        throw std::runtime_error{"File size not consistent with data in header"};
     }
 
     if (header_field<fields::proto_header_offset>() > file_size - file_header::size) {
-        throw std::runtime_error("Invalid proto header offset");
+        throw std::runtime_error{"Invalid proto header offset"};
     }
 
     if (header_field<fields::kf0_offset>() > file_size - file_header::size) {
-        throw std::runtime_error("Invalid keyframe 0 offset");
+        throw std::runtime_error{"Invalid keyframe 0 offset"};
     }
 
     if (header_field<fields::proto_header_offset>() > header_field<fields::kf0_offset>()) {
-        throw std::runtime_error("Proto header is placed after keyframe 0");
+        throw std::runtime_error{"Proto header is placed after keyframe 0"};
     }
 }
 
