@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
         sscanf(argv[3], "%d", &n);
-        mmap_writer wr(path, 2, argv[4], strlen(argv[4]));
+        mmap_writer wr{path, 2, argv[4], strlen(argv[4])};
         for (int i = 0; i < n; ++i) {
             std::string line;
             std::getline(std::cin, line);
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
             wr.append_delta(reinterpret_cast<const std::uint8_t *>(after.c_str()), after.size());
         }
     } else {    //read
-        mmap_reader rd(path);
+        mmap_reader rd{path};
         std::cout << "header: " << rd.get_proto_header() << std::endl;
         for (const auto &keyframe: rd) {
             std::cout << "keyframe: " << keyframe.get() << std::endl;
