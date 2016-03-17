@@ -18,3 +18,4 @@ target_link_libraries(cprotostream protostream)
 add_library(cprotostream_static STATIC src/cprotostream.cpp)
 target_link_libraries(cprotostream_static protostream)
 
+add_subdirectory(tests)
