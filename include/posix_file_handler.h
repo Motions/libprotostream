@@ -21,7 +21,7 @@ namespace detail {
 constexpr int open_flags(file_mode_t mode) {
     return mode == file_mode_t::READ_ONLY
            ? O_RDONLY
-           : O_RDWR | O_CREAT | O_EXCL;
+           : O_RDWR | O_CREAT;
 }
 }
 
