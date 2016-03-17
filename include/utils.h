@@ -96,8 +96,7 @@ inline std::uint16_t htobe<std::uint16_t>(const std::uint16_t x) {
 template<typename T>
 inline T readbuf_aligned(const void* ptr) {
     assert(reinterpret_cast<uintptr_t>(ptr) % sizeof(T) == 0);
-    return betoh<T>(*static_cast<T*>(ptr));
-
+    return betoh<T>(*static_cast<const T*>(ptr));
 }
 
 template<typename T>
