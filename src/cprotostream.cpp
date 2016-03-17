@@ -9,9 +9,9 @@ using namespace protostream;
 using hstream = stream<
         with_backend<mmap_backend<file_mode_t::READ_APPEND>>,
         with_cache<offsets_only_cache>,
-        with_keyframe_factory<default_factory<std::uint8_t*>>,
-        with_delta_factory<default_factory<std::uint8_t*>>,
-        with_proto_header_factory<default_factory<std::uint8_t*>>>;
+        with_keyframe_factory<default_factory<const std::uint8_t*>>,
+        with_delta_factory<default_factory<const std::uint8_t*>>,
+        with_proto_header_factory<default_factory<const std::uint8_t*>>>;
 
 HStream* protostream_open_existing(const char* path) noexcept {
     auto ptr = new hstream{path};
