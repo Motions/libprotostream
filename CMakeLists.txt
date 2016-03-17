@@ -18,3 +18,6 @@ target_link_libraries(cprotostream protostream)
 add_library(cprotostream_static STATIC src/cprotostream.cpp)
 target_link_libraries(cprotostream_static protostream)
 
+enable_testing()
+add_subdirectory(googletest)
+add_test(googletest googletest/googletest)
