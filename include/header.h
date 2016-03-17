@@ -22,7 +22,7 @@ struct kf0_offset : public detail::with_offset<offset_t, 8 * 3> { };
 struct keyframe_count : public detail::with_offset<offset_t, 8 * 4> { };
 struct frame_count : public detail::with_offset<offset_t, 8 * 5> { };
 struct frames_per_kf : public detail::with_offset<uint32_t, 8 * 6> { };
-struct reserved : public detail::placeholder<4, 8 * 7> { };
+struct reserved : public detail::placeholder<4, 8 * 6 + 4> { };
 
 }
 }
