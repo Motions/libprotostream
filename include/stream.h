@@ -152,7 +152,7 @@ public:
         friend class delta_iterator;
     };
 
-    class delta_iterator : std::iterator<std::forward_iterator_tag, delta_data> {
+    class delta_iterator : public std::iterator<std::forward_iterator_tag, delta_data> {
     public:
         const delta_data& operator*() const {
             return data;
@@ -250,7 +250,7 @@ public:
         friend class keyframe_iterator;
     };
 
-    class keyframe_iterator : std::iterator<std::forward_iterator_tag, keyframe_data> {
+    class keyframe_iterator : public std::iterator<std::forward_iterator_tag, keyframe_data> {
     public:
         const keyframe_data& operator*() const {
             assert(data.offset != no_keyframe);
