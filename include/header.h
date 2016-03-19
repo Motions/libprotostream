@@ -11,11 +11,13 @@ namespace protostream {
 namespace fields {
 inline namespace file_header {
 
-static constexpr const char magic_value[] = "PROTOSTR";
-static constexpr std::size_t magic_size = sizeof(magic_value) - 1;
-static_assert(magic_size == 8, "Invalid magic size");
+struct magic_field : public detail::magic_value<magic_field, 0> {
+    static constexpr const char* magic() {
+        return "PROTOSTR";
+    }
 
-struct magic_field : public detail::magic_value<magic_value, magic_size, 0> { };
+    static constexpr std::size_t size = 8;
+};
 struct file_size : public detail::with_offset<offset_t, 8> { };
 struct proto_header_offset : public detail::with_offset<offset_t, 8 * 2> { };
 struct kf0_offset : public detail::with_offset<offset_t, 8 * 3> { };
