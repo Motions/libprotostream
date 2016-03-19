@@ -27,8 +27,13 @@ TYPED_TEST(integration_read_simple, proto_header) {
 }
 
 TYPED_TEST(integration_read_simple, keyframe_count) {
+    EXPECT_EQ(TypeParam::test::keyframe_count, this->stream->keyframe_count());
     EXPECT_EQ(TypeParam::test::keyframe_count,
               std::distance(this->stream->begin(), this->stream->end()));
+}
+
+TYPED_TEST(integration_read_simple, frame_count) {
+    EXPECT_EQ(TypeParam::test::frame_count, this->stream->frame_count());
 }
 
 TYPED_TEST(integration_read_simple, keyframes) {
