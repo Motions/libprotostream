@@ -30,6 +30,10 @@ TYPED_TEST(integration_write_simple, write) {
                 stream.append_delta(reinterpret_cast<const std::uint8_t*>(data.c_str()), data.length());
             }
         }
+
+        EXPECT_EQ(TypeParam::test::keyframe_count, stream.keyframe_count());
+        EXPECT_EQ(TypeParam::test::frame_count, stream.frame_count());
+
     }
 
     EXPECT_EQ(file_contents(TypeParam::test::file), file.contents());
