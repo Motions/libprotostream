@@ -5,6 +5,9 @@
 #include "streams.h"
 #include "type_list.h"
 
+#include <numeric>
+#include <random>
+
 template<class Param>
 struct integration_read_simple : public testing::Test {
     virtual void SetUp() override {
@@ -16,6 +19,13 @@ struct integration_read_simple : public testing::Test {
     }
 protected:
     std::unique_ptr<typename Param::stream> stream;
+
+    void test_keyframe(std::size_t keyframeId) {
+        const auto keyframe = *(this->stream->begin() + keyframeId);
+        const auto expected = Param::test::frame(keyframeId * Param::test::frames_per_keyframe);
+        EXPECT_EQ(expected, keyframe.get());
+        EXPECT_EQ(expected, streams::types::string_factory::build(keyframe.raw(), keyframe.size()));
+    }
 };
 
 using pairs = type_list::product<streams::read_streams, simple_tests::tests>::type<testing::Types>;
@@ -43,6 +53,21 @@ TYPED_TEST(integration_read_simple, keyframes) {
         EXPECT_EQ(expected, keyframe.get());
         EXPECT_EQ(expected, streams::types::string_factory::build(keyframe.raw(), keyframe.size()));
         cnt += TypeParam::test::frames_per_keyframe;
+    }
+}
+
+TYPED_TEST(integration_read_simple, keyframes_reversed) {
+    for(auto cnt = static_cast<std::int64_t>(this->stream->keyframe_count()) - 1; cnt >= 0; --cnt) {
+        this->test_keyframe(cnt);
+    }
+}
+
+TYPED_TEST(integration_read_simple, keyframes_randomised) {
+    auto idxs = std::vector<std::size_t>(TypeParam::test::keyframe_count, 0);
+    std::iota(std::begin(idxs), std::end(idxs), 0);
+    std::shuffle(std::begin(idxs), std::end(idxs), std::mt19937_64{0x4242deadbeef4242llu});
+    for(auto idx : idxs) {
+        this->test_keyframe(idx);
     }
 }
 
