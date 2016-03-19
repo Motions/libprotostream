@@ -61,16 +61,15 @@ int main(int argc, char *argv[]) {
             return 1;
         }
         sscanf(argv[3], "%d", &n);
-        mmap_writer wr{path, 2, argv[4], strlen(argv[4])};
+        constexpr auto limit = 10;
+        mmap_writer wr{path, limit, argv[4], strlen(argv[4])};
         for (int i = 0; i < n; ++i) {
             std::string line;
             std::getline(std::cin, line);
-            auto space_pos = line.find(' ');
-            auto before = line.substr(0, space_pos);
-            auto after = line.substr(space_pos + 1);
-            std::cout << "AP kf|" << before << "| d|" << after << "||" << std::endl;
-            wr.append_keyframe(reinterpret_cast<const std::uint8_t *>(before.c_str()), before.size());
-            wr.append_delta(reinterpret_cast<const std::uint8_t *>(after.c_str()), after.size());
+            if(i % limit == 0)
+                wr.append_keyframe(reinterpret_cast<const std::uint8_t *>(line.c_str()), line.size());
+            else
+                wr.append_delta(reinterpret_cast<const std::uint8_t *>(line.c_str()), line.size());
         }
     } else {    //read
         mmap_reader rd{path};

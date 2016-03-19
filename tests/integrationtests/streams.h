@@ -1,13 +1,12 @@
-#pragma once
-
 #include "stream.h"
 #include "mmap_backend.h"
 #include "posix_file_backend.h"
 #include "cache.h"
 
-#include <gtest/gtest.h>
+namespace streams {
 
-namespace types {
+inline namespace types {
+
 using namespace protostream;
 
 struct string_factory {
@@ -51,10 +50,12 @@ using stream_reader = stream<
         with_delta_factory<string_factory>,
         with_proto_header_factory<string_factory>>;
 
+}
 
-using read_streams = testing::Types<
+using read_streams = std::tuple<
         types::mmap_reader, types::mmap_writer, types::stream_reader, types::stream_writer>;
 
-using write_streams = testing::Types<
+using write_streams = std::tuple<
         types::mmap_writer, types::stream_writer>;
+
 }
