@@ -363,6 +363,14 @@ public:
         header.write(backend, 0);
     }
 
+    std::size_t frame_count() const {
+        return header_field<fields::frame_count>();
+    }
+
+    std::size_t keyframe_count() const {
+        return header_field<fields::keyframe_count>();
+    }
+
 private:
     backend_type backend;
     mutable cache_type cache;
