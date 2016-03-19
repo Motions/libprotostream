@@ -11,11 +11,23 @@ namespace protostream {
 namespace detail {
 
 /** A simple magic value checker following the API of `with_offset` */
-template<const char* Magic, std::size_t MagicSize, offset_t Offset>
+template<class Derived, offset_t Offset>
 struct magic_value {
     static constexpr offset_t offset = Offset;
-    static constexpr const char* magic = Magic;
-    static constexpr std::size_t size = MagicSize;
+
+    /** The magic value itself is passed as the return value of a static constexpr method
+     *  of the Derived subclass. It is required to avoid clashes with the One Definition Rule
+     *  which severely restricts the other possibilities of passing a constexpr string literal
+     *  in a header-only library such as protostream:
+     *      * a static data member must be also defined/declared out-of-class
+     *      * passing the literal as a const char* template parameter technically means that
+     *        the deriving class may have a different base (magic_value<...>) in every translation
+     *        unit, because the address of the string literal may vary. Although this code
+     *        will probably behave correctly nevertheless, the standard declares the behaviour
+     *        undefined.
+     */
+    static constexpr const char* magic = Derived::magic_value();
+    static constexpr std::size_t size = Derived::magic_size;
 
     static magic_value read(const std::uint8_t* buffer) {
         if (0 != memcmp(buffer + offset, magic, size)) {

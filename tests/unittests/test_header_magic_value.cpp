@@ -2,11 +2,15 @@
 #include "header/magic_value.h"
 
 namespace {
-constexpr const char magic_value[] = "magic";
-constexpr auto magic_size = sizeof(magic_value) - 1;
 constexpr auto offset = 2;
 
-struct magic : protostream::detail::magic_value<magic_value, magic_size, offset> { };
+struct magic : protostream::detail::magic_value<magic, offset> {
+    static constexpr const char* magic_value() {
+        return "magic";
+    }
+
+    static constexpr auto magic_size = 5;
+};
 }
 
 TEST(header_magic_value, write_buffer) {
