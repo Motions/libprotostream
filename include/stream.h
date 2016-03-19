@@ -402,8 +402,14 @@ private:
 
 template<class... Args>
 stream<Args...>::stream(const char* path)
-        : backend{path}, cache{backend}, header{file_header::read(backend, 0)} {
+        : backend{path}, cache{backend} {
     const auto file_size = backend.size();
+
+    if (file_size < file_header::size) {
+        throw std::runtime_error{"File too small"};
+    }
+
+    header = file_header::read(backend, 0);
 
     if (header_field<fields::file_size>() != file_size) {
         throw std::runtime_error{"File size not consistent with data in header"};
