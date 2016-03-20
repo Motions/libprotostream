@@ -65,6 +65,14 @@ public:
         return std::get<Field>(fields).value;
     }
 
+    constexpr bool operator==(const generic_header &that) const {
+        return fields == that.fields;
+    }
+
+    constexpr bool operator!=(const generic_header &that) const {
+        return fields != that.fields;
+    }
+
 private:
     std::tuple<Fields...> fields;
 };
