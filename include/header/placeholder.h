@@ -23,6 +23,14 @@ struct placeholder {
 
     template<class... Args>
     void write(Args&& ...) const { }
+
+    constexpr bool operator==(placeholder) const {
+        return true;
+    }
+
+    constexpr bool operator!=(placeholder) const {
+        return false;
+    }
 };
 
 }
