@@ -1,4 +1,7 @@
 add_executable(unittests
+        cache_test_base.h
+        mock_backend.h
+        mock_cache.h
         test_file_backend.cpp
         test_file_header.cpp
         test_header_magic_value.cpp
@@ -6,10 +9,13 @@ add_executable(unittests
         test_posix_file_handler.cpp
         test_reduced_keyframe_header.cpp
         test_utils.cpp
-        )
+        test_cache_base.cpp
+        test_offsets_only_cache.cpp
+        test_full_cache.cpp)
 
 target_link_libraries(unittests
         protostream
         test_common
         gtest
-        gtest_main)
+        gmock
+        gmock_main)
