@@ -54,6 +54,14 @@ struct magic_value {
         backend.write(file_offset + offset, Derived::size,
                       reinterpret_cast<const std::uint8_t*>(Derived::magic()));
     }
+
+    constexpr bool operator==(magic_value) const {
+        return true;
+    }
+
+    constexpr bool operator!=(magic_value) const {
+        return false;
+    }
 };
 
 }

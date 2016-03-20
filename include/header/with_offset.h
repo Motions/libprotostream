@@ -43,6 +43,14 @@ struct with_offset {
     void write(Backend& backend, offset_t file_offset) const {
         backend.write_num(file_offset + offset, value);
     }
+
+    constexpr bool operator==(const with_offset &that) const {
+        return value == that.value;
+    }
+
+    constexpr bool operator!=(const with_offset &that) const {
+        return value == that.value;
+    }
 };
 
 }
