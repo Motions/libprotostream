@@ -36,11 +36,14 @@ public:
         assert(offset != no_keyframe);
 
         const auto& header = self()->header_at(offset);
-        const auto it = offsets.find(header.template get<fields::kf_num>() + (1 << level));
+        const auto kf_num = header.template get<fields::kf_num>();
 
+        const auto it = offsets.find(kf_num + (1 << level));
         if (it != offsets.end()) {
             return it->second;
         }
+
+        offsets.emplace(kf_num, offset);
 
         const auto ptr = backend.read(offset + fields::skiplist_offset(),
                                       sizeof(offset_t) * fields::skiplist_height);
@@ -55,7 +58,7 @@ public:
                     throw std::runtime_error{"Back link found"};
                 }
 
-                offsets.emplace(header.template get<fields::kf_num>() + (1 << i), link_offset);
+                offsets.emplace(kf_num + (1 << i), link_offset);
             }
         }
 
@@ -106,7 +109,7 @@ protected:
 
 public:
     explicit full_cache(Backend& backend)
-            : cache_base<full_cache<Backend>, Backend>{backend} { }
+            : base{backend} { }
 
     reduced_keyframe_header header_at(offset_t offset) {
         auto it = headers.find(offset);
