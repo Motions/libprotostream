@@ -16,7 +16,7 @@ namespace protostream {
  *    * reduced_keyframe_header header_at(offset_t offset)
  *        returns the header at offset `offset`, possibly a cached one
  */
-template<class Derived, class Backend>
+template <class Derived, class Backend>
 class cache_base {
 public:
     /** Returns the offset of the given keyframe, if known */
@@ -24,13 +24,13 @@ public:
         const auto it = offsets.find(keyframe_id);
         if (it == offsets.end()) {
             return {};
-        }
-        else {
+        } else {
             return {it->second};
         }
     }
 
-    /** Returns the `level`th link in the skiplist associated with the keyframe with offset `offset */
+    /** Returns the `level`th link in the skiplist associated with the keyframe
+   * with offset `offset */
     offset_t link_at(offset_t offset, unsigned level) {
         assert(level < fields::skiplist_height);
         assert(offset != no_keyframe);
@@ -66,7 +66,8 @@ public:
     }
 
 protected:
-    explicit cache_base(Backend& backend) : backend{backend} { }
+    explicit cache_base(Backend& backend) : backend{backend} {
+    }
 
     /** Returns the keyframe header read from the backend */
     reduced_keyframe_header retrieve(offset_t offset) const {
@@ -82,8 +83,9 @@ private:
     }
 };
 
-/** A simple cache, caching only the offsets (i.e. using only the features provided by cache_base) */
-template<class Backend>
+/** A simple cache, caching only the offsets (i.e. using only the features
+ * provided by cache_base) */
+template <class Backend>
 class offsets_only_cache : public cache_base<offsets_only_cache<Backend>, Backend> {
     using base = cache_base<offsets_only_cache<Backend>, Backend>;
 
@@ -91,8 +93,8 @@ protected:
     using base::retrieve;
 
 public:
-    explicit offsets_only_cache(Backend& backend)
-            : base{backend} { }
+    explicit offsets_only_cache(Backend& backend) : base{backend} {
+    }
 
     reduced_keyframe_header header_at(offset_t offset) const {
         return retrieve(offset);
@@ -100,7 +102,7 @@ public:
 };
 
 /** Caches not only the keyframe offsets, but also the keyframe headers. */
-template<class Backend>
+template <class Backend>
 class full_cache : public cache_base<full_cache<Backend>, Backend> {
     using base = cache_base<full_cache<Backend>, Backend>;
 
@@ -108,15 +110,14 @@ protected:
     using base::retrieve;
 
 public:
-    explicit full_cache(Backend& backend)
-            : base{backend} { }
+    explicit full_cache(Backend& backend) : base{backend} {
+    }
 
     reduced_keyframe_header header_at(offset_t offset) {
         auto it = headers.find(offset);
         if (it != headers.end()) {
             return it->second;
-        }
-        else {
+        } else {
             auto header = retrieve(offset);
             headers.emplace(offset, header);
             return header;
@@ -126,5 +127,4 @@ public:
 private:
     std::unordered_map<offset_t, reduced_keyframe_header> headers;
 };
-
 }

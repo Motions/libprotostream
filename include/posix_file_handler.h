@@ -13,34 +13,27 @@
 
 namespace protostream {
 
-enum class file_mode_t {
-    READ_ONLY, READ_APPEND
-};
+enum class file_mode_t { READ_ONLY, READ_APPEND };
 
 namespace detail {
 constexpr int open_flags(file_mode_t mode) {
-    return mode == file_mode_t::READ_ONLY
-           ? O_RDONLY
-           : O_RDWR | O_CREAT;
+    return mode == file_mode_t::READ_ONLY ? O_RDONLY : O_RDWR | O_CREAT;
 }
 }
 
 /** A RAII wrapper around open files */
-template<file_mode_t mode>
+template <file_mode_t mode>
 class posix_file_handler {
 public:
-    using buffer_type = std::conditional_t<mode == file_mode_t::READ_ONLY,
-                                            const std::uint8_t*,
-                                            std::uint8_t*>;
+    using buffer_type =
+        std::conditional_t<mode == file_mode_t::READ_ONLY, const std::uint8_t*, std::uint8_t*>;
 
     const int fd;
 
-    posix_file_handler(const char* path)
-            : fd(open(path, detail::open_flags(mode), 0666)) {
+    posix_file_handler(const char* path) : fd(open(path, detail::open_flags(mode), 0666)) {
         if (fd == -1) {
             throw std::system_error{errno, std::system_category(), "open"};
         }
-
     }
 
     ~posix_file_handler() {
@@ -59,17 +52,23 @@ public:
 
     void write(offset_t offset, size_t length, const std::uint8_t* from);
 
-    buffer_type mmap() { return mmap(size()); }
+    buffer_type mmap() {
+        return mmap(size());
+    }
 
     buffer_type mmap(std::size_t size);
 
-    void munmap(const buffer_type buffer) const { munmap(buffer, size()); }
+    void munmap(const buffer_type buffer) const {
+        munmap(buffer, size());
+    }
 
     void munmap(const buffer_type buffer, std::size_t size) const;
 
     buffer_type mremap(const buffer_type buffer, std::size_t old_size, std::size_t new_size);
 
-    void expand(std::size_t expand_by) { expand(size(), expand_by); }
+    void expand(std::size_t expand_by) {
+        expand(size(), expand_by);
+    }
 
     void expand(std::size_t current_size, std::size_t expand_by);
 
@@ -86,7 +85,7 @@ public:
     }
 };
 
-template<file_mode_t mode>
+template <file_mode_t mode>
 void posix_file_handler<mode>::read(offset_t offset, size_t length, std::uint8_t* into) const {
     size_t count = 0;
     while (count < length) {
@@ -102,7 +101,7 @@ void posix_file_handler<mode>::read(offset_t offset, size_t length, std::uint8_t
     }
 }
 
-template<>
+template <>
 inline void posix_file_handler<file_mode_t::READ_APPEND>::write(offset_t offset, size_t length,
                                                                 const std::uint8_t* from) {
     size_t count = 0;
@@ -117,16 +116,14 @@ inline void posix_file_handler<file_mode_t::READ_APPEND>::write(offset_t offset,
     }
 }
 
-template<file_mode_t mode>
+template <file_mode_t mode>
 auto posix_file_handler<mode>::mmap(std::size_t size) -> buffer_type {
     if (size == 0) {
         return nullptr;
     }
 
-    const auto mmap_prot = mode == file_mode_t::READ_ONLY
-                           ? PROT_READ : (PROT_WRITE | PROT_READ);
-    const auto mmap_flags = mode == file_mode_t::READ_ONLY
-                            ? MAP_PRIVATE : MAP_SHARED;
+    const auto mmap_prot = mode == file_mode_t::READ_ONLY ? PROT_READ : (PROT_WRITE | PROT_READ);
+    const auto mmap_flags = mode == file_mode_t::READ_ONLY ? MAP_PRIVATE : MAP_SHARED;
 
     auto buf = ::mmap(nullptr, size, mmap_prot, mmap_flags, fd, 0);
     if (buf == MAP_FAILED) {
@@ -135,7 +132,7 @@ auto posix_file_handler<mode>::mmap(std::size_t size) -> buffer_type {
     return static_cast<buffer_type>(buf);
 }
 
-template<file_mode_t mode>
+template <file_mode_t mode>
 void posix_file_handler<mode>::munmap(const buffer_type buffer, std::size_t size) const {
     if (!buffer) {
         return;
@@ -146,15 +143,14 @@ void posix_file_handler<mode>::munmap(const buffer_type buffer, std::size_t size
     }
 }
 
-template<file_mode_t mode>
+template <file_mode_t mode>
 auto posix_file_handler<mode>::mremap(const buffer_type buffer, std::size_t old_size,
                                       std::size_t new_size) -> buffer_type {
 #ifdef HAVE_MREMAP
     if (!buffer) {
         assert(old_size == 0);
         return mmap(new_size);
-    }
-    else {
+    } else {
         auto buf = ::mremap(buffer, old_size, new_size, MREMAP_MAYMOVE);
         if (buf == MAP_FAILED) {
             throw std::system_error{errno, std::system_category(), "mremap"};
@@ -167,8 +163,9 @@ auto posix_file_handler<mode>::mremap(const buffer_type buffer, std::size_t old_
 #endif
 }
 
-template<>
-inline void posix_file_handler<file_mode_t::READ_APPEND>::expand(std::size_t current_size, std::size_t expand_by) {
+template <>
+inline void posix_file_handler<file_mode_t::READ_APPEND>::expand(std::size_t current_size,
+                                                                 std::size_t expand_by) {
 #if defined(HAVE_FALLOCATE)
     if (fallocate(fd, 0, current_size, expand_by) != 0) {
         throw std::system_error{errno, std::system_category(), "fallocate"};
@@ -185,18 +182,20 @@ inline void posix_file_handler<file_mode_t::READ_APPEND>::expand(std::size_t cur
 #else
     char buf[] = {0};
     switch (auto ret = pwrite(fd, buf, 1, current_size + expand_by)) {
-        case 1: return;
-        case -1: throw std::system_error{errno, std::system_category(), "pwrite"};
-        default: throw std::runtime_error{"Write returned " + std::to_string(ret)};
+    case 1:
+        return;
+    case -1:
+        throw std::system_error{errno, std::system_category(), "pwrite"};
+    default:
+        throw std::runtime_error{"Write returned " + std::to_string(ret)};
     }
 #endif
 }
 
-template<>
+template <>
 inline void posix_file_handler<file_mode_t::READ_APPEND>::truncate(std::size_t new_size) {
     if (ftruncate(fd, new_size) != 0) {
         throw std::system_error{errno, std::system_category(), "ftruncate"};
     }
 }
-
 }

@@ -4,7 +4,8 @@
 #include <fstream>
 #include <iostream>
 
-temporary_file::temporary_file() : path{boost::filesystem::unique_path()}, released{false} { }
+temporary_file::temporary_file() : path{boost::filesystem::unique_path()}, released{false} {
+}
 
 temporary_file::temporary_file(const std::string& initial_contents) : temporary_file{} {
     auto stream = std::ofstream{filepath(), std::ofstream::binary};
@@ -15,7 +16,9 @@ const char* temporary_file::filepath() const {
     return path.native().c_str();
 }
 
-temporary_file::temporary_file(temporary_file&& that) : path{std::move(that.path)}, released{false} { }
+temporary_file::temporary_file(temporary_file&& that)
+    : path{std::move(that.path)}, released{false} {
+}
 
 temporary_file& temporary_file::operator=(temporary_file&& that) {
     path = std::move(that.path);
