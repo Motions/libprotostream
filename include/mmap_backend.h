@@ -1,8 +1,8 @@
 #pragma once
 
 #include "file_backend.h"
+#include "mmap_guard.h"
 #include "posix_file_handler.h"
-
 
 namespace protostream {
 
@@ -12,13 +12,13 @@ class mmap_backend : public file_backend<mmap_backend<mode, ExpansionGranularity
     static constexpr size_t expansion_granularity = ExpansionGranularity;
 
 public:
-    /** Raw pointers are returned directly -- no deallocation is needed,
+    /** Raw pointers are returned directly -- no deallocation ii needed,
      *  because the whole file is memory-mapped
      */
     using pointer_type = const std::uint8_t*;
 
     mmap_backend(const char* path)
-            : file{path}, used_size{file.size()}, file_size{used_size}, buffer{file.mmap(file_size)} { }
+            : file{path}, used_size{file.size()}, buffer{file} { }
 
     /** If an unrecoverable system error occurs this destructor WILL throw an exception */
     ~mmap_backend() noexcept(false);
@@ -40,7 +40,7 @@ public:
     pointer_type read(offset_t offset, size_t length) const {
         assert(offset + length <= used_size);
         (void) length;
-        return buffer + offset;
+        return buffer.get() + offset;
     }
 
     std::size_t size() const {
@@ -50,53 +50,48 @@ public:
     template<class T>
     void write_small(offset_t offset, const T* from) {
         check_expand(offset + sizeof(*from));
-        *reinterpret_cast<T*>(buffer + offset) = *from;
+        *reinterpret_cast<T*>(buffer.get() + offset) = *from;
     }
 
     void write(offset_t offset, size_t length, const std::uint8_t* from) {
         check_expand(offset + length);
-        memcpy(buffer + offset, from, length);
+        memcpy(buffer.get() + offset, from, length);
     }
 
 private:
     posix_file_handler<mode> file;
-    std::size_t used_size, file_size;
-    typename posix_file_handler<mode>::buffer_type buffer;
+    std::size_t used_size;
+    mmap_guard<posix_file_handler<mode>> buffer;
 
     void check_expand(std::size_t new_end);
 };
 
 template<>
-inline mmap_backend<file_mode_t::READ_ONLY>::~mmap_backend() noexcept(false) {
-    file.munmap(buffer, file_size);
-}
+inline mmap_backend<file_mode_t::READ_ONLY>::~mmap_backend() noexcept(false) { }
 
 template<>
 inline mmap_backend<file_mode_t::READ_APPEND>::~mmap_backend() noexcept(false) {
-    file.munmap(buffer, file_size);
-
-    if (used_size != file_size) {
+    if (used_size != buffer.size()) {
         file.truncate(used_size);
     }
 }
 
 template<>
 inline void mmap_backend<file_mode_t::READ_APPEND>::check_expand(std::size_t new_end) {
-    if (new_end < file_size) {
+    if (new_end < buffer.size()) {
         used_size = std::max(new_end, used_size);
         return;
     }
 
-    auto expand_by = new_end - file_size;
+    auto expand_by = new_end - buffer.size();
 
     /* Round up to the nearest multiple of expansion_granularity */
     expand_by += expansion_granularity - 1;
     expand_by /= expansion_granularity;
     expand_by *= expansion_granularity;
 
-    file.expand(file_size, expand_by);
-    buffer = file.mremap(buffer, file_size, file_size + expand_by);
-    file_size += expand_by;
+    file.expand(buffer.size(), expand_by);
+    buffer.mremap(buffer.size() + expand_by);
     used_size = new_end;
 }
 
