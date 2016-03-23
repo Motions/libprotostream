@@ -4,12 +4,12 @@
 
 #include "../common/temporary_file.h"
 
-using backends = testing::Types<
-        protostream::mmap_backend<protostream::file_mode_t::READ_APPEND>,
-        protostream::posix_file_backend<protostream::file_mode_t::READ_APPEND>>;
+using backends =
+    testing::Types<protostream::mmap_backend<protostream::file_mode_t::READ_APPEND>,
+                   protostream::posix_file_backend<protostream::file_mode_t::READ_APPEND>>;
 
-template<class T>
-struct file_backend : public testing::Test { };
+template <class T>
+struct file_backend : public testing::Test {};
 
 TYPED_TEST_CASE(file_backend, backends);
 
@@ -77,9 +77,8 @@ TYPED_TEST(file_backend, write_small) {
         backend.write_small(8, &big_endian);
     }
 
-    const auto expected = std::string{
-            '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00',
-            '\xde', '\xad', '\xbe', '\xef', '\x12', '\x34', '\x56', '\x78'};
+    std::string expected{'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00',
+                         '\xde', '\xad', '\xbe', '\xef', '\x12', '\x34', '\x56', '\x78'};
     EXPECT_EQ(expected, file.contents());
 }
 
@@ -100,7 +99,8 @@ TYPED_TEST(file_backend, write_num) {
         backend.write_num(4, std::uint32_t{0xdeadbeefu});
     }
 
-    const auto expected = std::string{'\x00', '\x00', '\x00', '\x00', '\xde', '\xad', '\xbe', '\xef'};
+    const auto expected =
+        std::string{'\x00', '\x00', '\x00', '\x00', '\xde', '\xad', '\xbe', '\xef'};
     EXPECT_EQ(expected, file.contents());
 }
 

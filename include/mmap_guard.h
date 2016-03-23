@@ -4,15 +4,17 @@
 
 namespace protostream {
 
-template<class Handler>
+template <class Handler>
 class mmap_guard {
 public:
     using buffer_type = typename Handler::buffer_type;
 
-    mmap_guard(Handler& handler) : mmap_guard{handler, handler.size()} { }
+    mmap_guard(Handler& handler) : mmap_guard{handler, handler.size()} {
+    }
 
     mmap_guard(Handler& handler, std::size_t size)
-            : handler{handler}, bufsize{size}, buffer{handler.mmap(size)} { }
+        : handler{handler}, bufsize{size}, buffer{handler.mmap(size)} {
+    }
 
     mmap_guard(const mmap_guard&) = delete;
 
@@ -38,10 +40,10 @@ public:
     buffer_type get() const {
         return buffer;
     }
+
 private:
-    Handler &handler;
+    Handler& handler;
     std::size_t bufsize;
     buffer_type buffer;
 };
-
 }

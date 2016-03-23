@@ -8,7 +8,7 @@
 #include <numeric>
 #include <random>
 
-template<class Param>
+template <class Param>
 struct integration_read_simple : public testing::Test {
     virtual void SetUp() override {
         stream = std::make_unique<typename Param::stream>(Param::test::file);
@@ -17,6 +17,7 @@ struct integration_read_simple : public testing::Test {
     virtual void TearDown() override {
         stream.reset();
     }
+
 protected:
     std::unique_ptr<typename Param::stream> stream;
 
@@ -57,7 +58,8 @@ TYPED_TEST(integration_read_simple, keyframes) {
 }
 
 TYPED_TEST(integration_read_simple, keyframes_reversed) {
-    for(auto cnt = static_cast<std::int64_t>(this->stream->keyframe_count()) - 1; cnt >= 0; --cnt) {
+    for (auto cnt = static_cast<std::int64_t>(this->stream->keyframe_count()) - 1; cnt >= 0;
+         --cnt) {
         this->test_keyframe(cnt);
     }
 }
@@ -66,7 +68,7 @@ TYPED_TEST(integration_read_simple, keyframes_randomised) {
     auto idxs = std::vector<std::size_t>(TypeParam::test::keyframe_count, 0);
     std::iota(std::begin(idxs), std::end(idxs), 0);
     std::shuffle(std::begin(idxs), std::end(idxs), std::mt19937_64{0x4242deadbeef4242llu});
-    for(auto idx : idxs) {
+    for (auto idx : idxs) {
         this->test_keyframe(idx);
     }
 }
@@ -75,10 +77,11 @@ TYPED_TEST(integration_read_simple, deltas) {
     auto cnt = std::size_t{0};
     for (const auto& keyframe : *this->stream) {
         if (cnt + TypeParam::test::frames_per_keyframe <= TypeParam::test::frame_count) {
-            ASSERT_EQ(TypeParam::test::frames_per_keyframe - 1, std::distance(keyframe.begin(), keyframe.end()));
-        }
-        else {
-            ASSERT_EQ(TypeParam::test::frame_count - cnt - 1, std::distance(keyframe.begin(), keyframe.end()));
+            ASSERT_EQ(TypeParam::test::frames_per_keyframe - 1,
+                      std::distance(keyframe.begin(), keyframe.end()));
+        } else {
+            ASSERT_EQ(TypeParam::test::frame_count - cnt - 1,
+                      std::distance(keyframe.begin(), keyframe.end()));
         }
 
         cnt++;

@@ -7,7 +7,7 @@ namespace protostream {
 namespace detail {
 
 /** A wrapper around the type `T`, enriching it with offset information. */
-template<class T, offset_t Offset>
+template <class T, offset_t Offset>
 struct with_offset {
     using type = T;
     static constexpr offset_t offset = Offset;
@@ -15,7 +15,8 @@ struct with_offset {
 
     type value;
 
-    constexpr with_offset(type value = 0) : value{value} { }
+    constexpr with_offset(type value = 0) : value{value} {
+    }
 
     constexpr operator type() const {
         return value;
@@ -25,13 +26,13 @@ struct with_offset {
         return readbuf_aligned<type>(buffer + offset);
     }
 
-    template<class Backend>
+    template <class Backend>
     static with_offset read(const Backend& backend, offset_t file_offset) {
         return backend.template read_num<type>(file_offset + offset);
     }
 
-    template<class... Args>
-    void read_self(Args&& ... args) {
+    template <class... Args>
+    void read_self(Args&&... args) {
         value = with_offset::read(std::forward<Args>(args)...);
     }
 
@@ -39,19 +40,18 @@ struct with_offset {
         writebuf(buffer + offset, value);
     }
 
-    template<class Backend>
+    template <class Backend>
     void write(Backend& backend, offset_t file_offset) const {
         backend.write_num(file_offset + offset, value);
     }
 
-    constexpr bool operator==(const with_offset &that) const {
+    constexpr bool operator==(const with_offset& that) const {
         return value == that.value;
     }
 
-    constexpr bool operator!=(const with_offset &that) const {
+    constexpr bool operator!=(const with_offset& that) const {
         return value == that.value;
     }
 };
-
 }
 }

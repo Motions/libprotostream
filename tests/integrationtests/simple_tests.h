@@ -30,5 +30,4 @@ struct medium_test {
 };
 
 using tests = std::tuple<small_test, medium_test>;
-
 }
