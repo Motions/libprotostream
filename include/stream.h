@@ -14,23 +14,24 @@ namespace protostream {
 
 namespace detail {
 /** A tag used to annotate `with_*` options */
-struct constraint { };
+struct constraint {};
 
 /** Merges `with_*` options together */
-template<class... Args>
-struct options_handler : public Args ... {
-    static_assert(conjunction<std::is_base_of<constraint, Args>...>::value, "Some arguments are illegal");
+template <class... Args>
+struct options_handler : public Args... {
+    static_assert(conjunction<std::is_base_of<constraint, Args>...>::value,
+                  "Some arguments are illegal");
 };
 }
 
-template<class Backend>
+template <class Backend>
 struct with_backend : detail::constraint {
     using backend_type = Backend;
 };
 
-template<template<class> class Cache>
+template <template <class> class Cache>
 struct with_cache : detail::constraint {
-    template<class Backend>
+    template <class Backend>
     using cache_type = Cache<Backend>;
 };
 
@@ -42,7 +43,7 @@ struct with_cache : detail::constraint {
  *   * static type build(pointer_type ptr, std::size_t len)
  *       where pointer_type is defined as backend_type::pointer_type
  */
-template<class ProtoHeaderFactory>
+template <class ProtoHeaderFactory>
 struct with_proto_header_factory : detail::constraint {
     using proto_header_factory_type = ProtoHeaderFactory;
 };
@@ -50,7 +51,7 @@ struct with_proto_header_factory : detail::constraint {
 /** Sets the keyframe factory.
  *  See `with_proto_header_factory` for the requirements to be met.
  */
-template<class KeyframeFactory>
+template <class KeyframeFactory>
 struct with_keyframe_factory : detail::constraint {
     using keyframe_factory_type = KeyframeFactory;
 };
@@ -58,12 +59,12 @@ struct with_keyframe_factory : detail::constraint {
 /** Sets the delta factory.
  *  See `with_proto_header_factory` for the requirements to be met.
  */
-template<class DeltaFactory>
+template <class DeltaFactory>
 struct with_delta_factory : detail::constraint {
     using delta_factory_type = DeltaFactory;
 };
 
-template<class Pointer>
+template <class Pointer>
 struct default_factory {
     using type = std::pair<Pointer, std::size_t>;
 
@@ -72,7 +73,7 @@ struct default_factory {
     }
 };
 
-template<class... Args>
+template <class... Args>
 class stream : public detail::options_handler<Args...> {
 public:
     using typename detail::options_handler<Args...>::backend_type;
@@ -89,8 +90,8 @@ public:
     stream(const char* path);
 
     /** Opens the file and writes a new header to it */
-    stream(const char* path, std::uint32_t frames_per_kf,
-           const void* proto_header, std::size_t proto_header_size);
+    stream(const char* path, std::uint32_t frames_per_kf, const void* proto_header,
+           std::size_t proto_header_size);
 
     stream(const stream&) = delete;
 
@@ -101,10 +102,10 @@ public:
     stream& operator=(stream&&) = default;
 
     proto_header_type get_proto_header() const {
-        const auto size = header_field<fields::kf0_offset>() - header_field<fields::proto_header_offset>();
+        const auto size =
+            header_field<fields::kf0_offset>() - header_field<fields::proto_header_offset>();
         return proto_header_factory_type::build(
-                backend.read(header_field<fields::proto_header_offset>(), size),
-                size);
+            backend.read(header_field<fields::proto_header_offset>(), size), size);
     }
 
     class keyframe_iterator;
@@ -141,13 +142,15 @@ public:
         keyframe_id_t frame_id;
 
         /* Represents a past-the-end "delta". Its offset is undefined, only
-         * `frame_id`s are used in comparison operators.
-         */
+     * `frame_id`s are used in comparison operators.
+     */
         delta_data(const stream& str, keyframe_id_t frame_id)
-                : str{str}, offset{std::numeric_limits<offset_t>::max()}, frame_id{frame_id} { }
+            : str{str}, offset{std::numeric_limits<offset_t>::max()}, frame_id{frame_id} {
+        }
 
         delta_data(const stream& str, offset_t offset, keyframe_id_t frame_id)
-                : str{str}, offset{offset}, frame_id{frame_id} { }
+            : str{str}, offset{offset}, frame_id{frame_id} {
+        }
 
         friend class delta_iterator;
     };
@@ -184,11 +187,12 @@ public:
 
     private:
         /* Creates a past-the-end iterator. */
-        delta_iterator(const stream& str, keyframe_id_t frame_id)
-                : data{str, frame_id} { }
+        delta_iterator(const stream& str, keyframe_id_t frame_id) : data{str, frame_id} {
+        }
 
         delta_iterator(const stream& str, offset_t offset, keyframe_id_t frame_id)
-                : data{str, offset, frame_id} { }
+            : data{str, offset, frame_id} {
+        }
 
         delta_data data;
 
@@ -202,7 +206,8 @@ public:
         }
 
         delta_iterator begin() const {
-            return {str, field<fields::delta_offset>(), id() * str.header_field<fields::frames_per_kf>() + 1};
+            return {str, field<fields::delta_offset>(),
+                    id() * str.header_field<fields::frames_per_kf>() + 1};
         }
 
         delta_iterator end() const {
@@ -231,7 +236,8 @@ public:
         }
 
     private:
-        keyframe_data(const stream& str, offset_t offset) : str{str}, offset{offset} { }
+        keyframe_data(const stream& str, offset_t offset) : str{str}, offset{offset} {
+        }
 
         const stream& str;
         offset_t offset;
@@ -240,7 +246,7 @@ public:
             return str.cache.header_at(offset);
         }
 
-        template<class Field>
+        template <class Field>
         auto field() const {
             return header().template get<Field>();
         }
@@ -278,8 +284,7 @@ public:
 
             if (auto offset_opt = data.str.cache.offset_of(data.id() + diff)) {
                 data.offset = *offset_opt;
-            }
-            else {
+            } else {
                 for (auto level = fields::skiplist_height - 1; diff > 0; level--) {
                     while (diff >= (1u << level)) {
                         diff -= 1u << level;
@@ -307,8 +312,7 @@ public:
         }
 
     private:
-        keyframe_iterator(const stream& str, offset_t offset)
-                : data{str, offset} {
+        keyframe_iterator(const stream& str, offset_t offset) : data{str, offset} {
         }
 
         offset_t link(unsigned level) const {
@@ -376,12 +380,12 @@ private:
     mutable cache_type cache;
     file_header header;
 
-    template<class Field>
+    template <class Field>
     auto header_field() const {
         return header.template get<Field>();
     }
 
-    template<class Field>
+    template <class Field>
     auto& header_field() {
         return header.template get<Field>();
     }
@@ -408,9 +412,9 @@ private:
     }
 };
 
-template<class... Args>
+template <class... Args>
 stream<Args...>::stream(const char* path)
-        : backend{path}, cache{backend} {
+    : backend{path}, cache{backend} {
     const auto file_size = backend.size();
 
     if (file_size < file_header::size) {
@@ -436,10 +440,10 @@ stream<Args...>::stream(const char* path)
     }
 }
 
-template<class... Args>
+template <class... Args>
 stream<Args...>::stream(const char* path, std::uint32_t frames_per_kf, const void* proto_header,
                         std::size_t proto_header_size)
-        : backend{path}, cache{backend} {
+    : backend{path}, cache{backend} {
     auto end = file_header::size + proto_header_size;
 
     header_field<fields::file_size>() = end;
@@ -448,17 +452,17 @@ stream<Args...>::stream(const char* path, std::uint32_t frames_per_kf, const voi
     header_field<fields::frames_per_kf>() = frames_per_kf;
     header.write(backend, 0);
 
-    backend.write(file_header::size, proto_header_size, static_cast<const std::uint8_t*>(proto_header));
+    backend.write(file_header::size, proto_header_size,
+                  static_cast<const std::uint8_t*>(proto_header));
 }
 
-template<class... Args>
+template <class... Args>
 auto begin(const stream<Args...>& stream) {
     return stream.begin();
 }
 
-template<class... Args>
+template <class... Args>
 auto end(const stream<Args...>& stream) {
     return stream.end();
 }
-
 }

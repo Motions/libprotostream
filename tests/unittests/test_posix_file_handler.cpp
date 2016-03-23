@@ -31,7 +31,8 @@ TEST(posix_file_handler, write) {
     ASSERT_EQ(offset + strlen(bytes), file.size());
 
     auto buffer = file.contents();
-    EXPECT_EQ(std::string(offset, '\0'), std::string(std::cbegin(buffer), std::cbegin(buffer) + offset));
+    EXPECT_EQ(std::string(offset, '\0'),
+              std::string(std::cbegin(buffer), std::cbegin(buffer) + offset));
     EXPECT_EQ(std::string{bytes}, std::string(std::cbegin(buffer) + offset, std::cend(buffer)));
 }
 
@@ -60,7 +61,8 @@ TEST(posix_file_handler, read) {
     auto buffer = std::array<std::uint8_t, 6>{};
     constexpr auto offset = 3;
     handler.read(offset, buffer.size(), buffer.data());
-    EXPECT_EQ(payload.substr(offset, buffer.size()), std::string(std::begin(buffer), std::end(buffer)));
+    EXPECT_EQ(payload.substr(offset, buffer.size()),
+              std::string(std::begin(buffer), std::end(buffer)));
 }
 
 TEST(posix_file_handler, mmap_read) {
