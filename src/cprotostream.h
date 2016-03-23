@@ -6,8 +6,9 @@
 #ifdef __cplusplus
 extern "C" {
 
-/** Almost every function declared in this file wraps a protostream function which may throw
- * an exception if a system error occurs. In this case cprotostream aborts execution.
+/** Almost every function declared in this file wraps a protostream function
+ * which may throw an exception if a system error occurs. In this case cprotostream
+ * aborts execution.
  */
 #define NOEXCEPT noexcept
 #else
@@ -27,14 +28,18 @@ typedef struct HDeltaIterator HDeltaIterator;
 HStream* protostream_open_existing(const char* path) NOEXCEPT;
 
 /** Opens a protostream file and writes a new header to it */
-HStream* protostream_open_new(const char* path, uint32_t frames_per_kf,
-                              const void* proto_header, size_t proto_header_size) NOEXCEPT;
+HStream* protostream_open_new(const char* path,
+                              uint32_t frames_per_kf,
+                              const void* proto_header,
+                              size_t proto_header_size) NOEXCEPT;
 
 /** Closes a protostream file */
 void protostream_close(HStream* stream) NOEXCEPT;
 
 /** Appends a keyframe to a protostream */
-void protostream_append_keyframe(HStream* stream, const void* keyframe, size_t keyframe_size) NOEXCEPT;
+void protostream_append_keyframe(HStream* stream,
+                                 const void* keyframe,
+                                 size_t keyframe_size) NOEXCEPT;
 
 /** Appends a delta to a protostream */
 void protostream_append_delta(HStream* stream, const void* delta, size_t delta_size) NOEXCEPT;
@@ -57,7 +62,9 @@ HKeyframeIterator* protostream_iter_keyframes(HStream* stream) NOEXCEPT;
  *     where stream is the appropriate HStream
  * The address of the keyframe is written into *into and its size into *size
  */
-void protostream_get_keyframe(HKeyframeIterator* iterator, const void** into, size_t* size) NOEXCEPT;
+void protostream_get_keyframe(HKeyframeIterator* iterator,
+                              const void** into,
+                              size_t* size) NOEXCEPT;
 
 /** Frees the contents of a keyframe returned by protostream_get_keyframe */
 void protostream_free_keyframe(const void* keyframe) NOEXCEPT;
@@ -100,7 +107,8 @@ void protostream_free_delta(const void* delta) NOEXCEPT;
  *     - 1 if the iterator points to a valid delta
  *     - 0 if the iterator is a past-the-end iterator
  */
-int protostream_valid_delta_iterator(HKeyframeIterator* keyframe, HDeltaIterator* iterator) NOEXCEPT;
+int protostream_valid_delta_iterator(HKeyframeIterator* keyframe,
+                                     HDeltaIterator* iterator) NOEXCEPT;
 
 /** Advances a delta iterator.
  *

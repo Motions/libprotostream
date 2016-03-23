@@ -4,10 +4,11 @@
 #include "streams.h"
 #include "../common/temporary_file.h"
 
-template<class Stream>
-struct integration_read_error : public testing::Test { };
+template <class Stream>
+struct integration_read_error : public testing::Test {};
 
-TYPED_TEST_CASE(integration_read_error, type_list::unapply<streams::read_streams>::type<testing::Types>);
+TYPED_TEST_CASE(integration_read_error,
+                type_list::unapply<streams::read_streams>::type<testing::Types>);
 
 TYPED_TEST(integration_read_error, empty_file) {
     auto file = temporary_file{};
