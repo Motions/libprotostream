@@ -7,7 +7,7 @@
 #include "common.h"
 #include "header.h"
 
-template<template<class> class Cache>
+template <template <class> class Cache>
 struct cache_test_base : public testing::Test {
     static offset_t link(unsigned level) {
         return 500000 + 100 * level;
@@ -35,20 +35,21 @@ struct cache_test_base : public testing::Test {
     }
 
     void expect_skiplist_read(protostream::offset_t keyframe_offset) {
-        EXPECT_CALL(*backend, read(keyframe_offset + protostream::fields::skiplist_offset(), sizeof(skiplist)))
-                .WillOnce(testing::Return(reinterpret_cast<const std::uint8_t*>(skiplist.data())));
+        EXPECT_CALL(*backend, read(keyframe_offset + protostream::fields::skiplist_offset(),
+                                   sizeof(skiplist)))
+            .WillOnce(testing::Return(reinterpret_cast<const std::uint8_t*>(skiplist.data())));
     }
 
-    template<class Field>
+    template <class Field>
     void expect_field_reads(protostream::offset_t keyframe_offset) {
         read_helper<Field>{}(*backend, keyframe_offset)
-                .WillRepeatedly(testing::Return(header.get<Field>()));
+            .WillRepeatedly(testing::Return(header.get<Field>()));
     }
 
-    template<class Field>
+    template <class Field>
     void expect_field_read(protostream::offset_t keyframe_offset) {
         read_helper<Field>{}(*backend, keyframe_offset)
-                .WillOnce(testing::Return(header.get<Field>()));
+            .WillOnce(testing::Return(header.get<Field>()));
     }
 
     std::unique_ptr<mock_backend> backend;
@@ -58,22 +59,22 @@ struct cache_test_base : public testing::Test {
     static std::array<offset_t, protostream::fields::skiplist_height> skiplist;
 
 private:
-    template<class Field, unsigned bits = 8 * Field::size>
+    template <class Field, unsigned bits = 8 * Field::size>
     struct read_helper;
 
-#define CACHE_TEST_BASE_DEFINE_HELPER(bits) \
-    template<class Field> \
-    struct read_helper<Field, bits> { \
-        auto&& operator()(mock_backend &backend, protostream::offset_t keyframe_offset) { \
-            return EXPECT_CALL(backend, read ## bits(keyframe_offset + Field::offset)); \
-        } \
+#define CACHE_TEST_BASE_DEFINE_HELPER(bits)                                                        \
+    template <class Field>                                                                         \
+    struct read_helper<Field, bits> {                                                              \
+        auto&& operator()(mock_backend & backend, protostream::offset_t keyframe_offset) {         \
+            return EXPECT_CALL(backend, read##bits(keyframe_offset + Field::offset));              \
+        }                                                                                          \
     };
 
     MOCK_BACKEND_FOR_ALL_NUMERICS(CACHE_TEST_BASE_DEFINE_HELPER);
 };
 
-template<template<class> class Cache>
+template <template <class> class Cache>
 protostream::reduced_keyframe_header cache_test_base<Cache>::header;
 
-template<template<class> class Cache>
+template <template <class> class Cache>
 std::array<offset_t, protostream::fields::skiplist_height> cache_test_base<Cache>::skiplist;

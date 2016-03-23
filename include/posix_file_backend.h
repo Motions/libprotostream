@@ -13,12 +13,13 @@
 namespace protostream {
 
 /** A backend using pread/pwrite system calls. */
-template<file_mode_t mode>
+template <file_mode_t mode>
 class posix_file_backend : public file_backend<posix_file_backend<mode>> {
 public:
     using pointer_type = std::unique_ptr<const std::uint8_t[]>;
 
-    posix_file_backend(const char* path) : file{path} { }
+    posix_file_backend(const char* path) : file{path} {
+    }
 
     posix_file_backend(const posix_file_backend&) = delete;
 
@@ -28,7 +29,7 @@ public:
 
     posix_file_backend& operator=(posix_file_backend&&) = default;
 
-    template<class T>
+    template <class T>
     void read_small(offset_t offset, T* into) const {
         file.read(offset, sizeof(T), reinterpret_cast<std::uint8_t*>(into));
     }
@@ -39,13 +40,13 @@ public:
         return {std::move(result)};
     }
 
-    template<class T>
+    template <class T>
     void write_small(offset_t offset, const T* from) {
         static_assert(mode == file_mode_t::READ_APPEND, "writing into a read-only file");
         file.write(offset, sizeof(T), reinterpret_cast<const std::uint8_t*>(from));
     }
 
-    template<bool /* dummy */ = true>
+    template <bool /* dummy */ = true>
     void write(offset_t offset, size_t length, const std::uint8_t* from) {
         static_assert(mode == file_mode_t::READ_APPEND, "writing into a read-only file");
         file.write(offset, length, from);
@@ -58,5 +59,4 @@ public:
 private:
     posix_file_handler<mode> file;
 };
-
 }

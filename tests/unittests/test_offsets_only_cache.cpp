@@ -6,7 +6,7 @@
 
 #include "cache_test_base.h"
 
-struct offsets_only_cache : public cache_test_base<protostream::offsets_only_cache> { };
+struct offsets_only_cache : public cache_test_base<protostream::offsets_only_cache> {};
 
 TEST_F(offsets_only_cache, read_header) {
     constexpr offset_t keyframe_offset = 404;

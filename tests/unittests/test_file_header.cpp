@@ -4,16 +4,15 @@
 #include <array>
 
 namespace {
-constexpr const char serialised[] =
-        "PROTOSTR"                         /* magic value */
-        ""                                 /* padding */
-        "\xde\xad\xbe\xef\xfe\xbe\xad\xde" /* file size */
-        "\x12\x23\x34\x45\x98\x87\x76\x65" /* header offset */
-        "\x99\x88\x77\x66\x12\x83\x29\x38" /* kf0 offset */
-        "\x8f\x1e\x0b\x3d\x9a\x7b\x00\xff" /* keyframe count */
-        "\x00\x01\x02\x03\x29\x10\xff\xff" /* frame count */
-        "\xff\x0d\xe9\x21"                 /* frames per keyframe */
-        "\x00\x00\x00\x00";                /* reserved */
+constexpr const char serialised[] = "PROTOSTR"                         /* magic value */
+                                    ""                                 /* padding */
+                                    "\xde\xad\xbe\xef\xfe\xbe\xad\xde" /* file size */
+                                    "\x12\x23\x34\x45\x98\x87\x76\x65" /* header offset */
+                                    "\x99\x88\x77\x66\x12\x83\x29\x38" /* kf0 offset */
+                                    "\x8f\x1e\x0b\x3d\x9a\x7b\x00\xff" /* keyframe count */
+                                    "\x00\x01\x02\x03\x29\x10\xff\xff" /* frame count */
+                                    "\xff\x0d\xe9\x21"                 /* frames per keyframe */
+                                    "\x00\x00\x00\x00";                /* reserved */
 
 constexpr auto file_size = std::uint64_t{0xdeadbeeffebeaddellu};
 constexpr auto proto_header_offset = std::uint64_t{0x1223344598877665llu};
@@ -26,7 +25,8 @@ constexpr auto frames_per_kf = std::uint32_t{0xff0de921u};
 static_assert(protostream::file_header::size == sizeof(serialised) - 1, "Wrong header size");
 
 TEST(file_header, read) {
-    const auto header = protostream::file_header::read(reinterpret_cast<const std::uint8_t*>(serialised));
+    const auto header =
+        protostream::file_header::read(reinterpret_cast<const std::uint8_t*>(serialised));
 
     EXPECT_EQ(file_size, header.get<protostream::fields::file_size>());
     EXPECT_EQ(proto_header_offset, header.get<protostream::fields::proto_header_offset>());
