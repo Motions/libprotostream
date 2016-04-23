@@ -80,7 +80,7 @@ inline mmap_backend<file_mode_t::READ_APPEND>::~mmap_backend() noexcept(false) {
 
 template <>
 inline void mmap_backend<file_mode_t::READ_APPEND>::check_expand(std::size_t new_end) {
-    if (new_end < buffer.size()) {
+    if (new_end <= buffer.size()) {
         used_size = std::max(new_end, used_size);
         return;
     }
