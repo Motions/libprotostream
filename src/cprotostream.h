@@ -82,7 +82,7 @@ int protostream_valid_keyframe_iterator(HStream* stream, HKeyframeIterator* iter
  *  Precondition: protostream_valid_keyframe_iterator(stream, iterator),
  *     where stream is the appropriate HStream
  */
-void protostream_advance_keyframe_iterator(HKeyframeIterator* iterator) NOEXCEPT;
+void protostream_advance_keyframe_iterator(HKeyframeIterator* iterator, uint32_t offset) NOEXCEPT;
 
 /** Frees a keyframe iterator */
 void protostream_free_keyframe_iterator(HKeyframeIterator* iterator) NOEXCEPT;
