@@ -72,8 +72,9 @@ int protostream_valid_keyframe_iterator(HStream* stream, HKeyframeIterator* iter
     return *it == stream_ptr->end();
 }
 
-void protostream_advance_keyframe_iterator(HKeyframeIterator* iterator) noexcept {
-    ++*reinterpret_cast<hstream::keyframe_iterator*>(iterator);
+void protostream_advance_keyframe_iterator(HKeyframeIterator* iterator, int offset) noexcept {
+    auto it = reinterpret_cast<hstream::keyframe_iterator*>(iterator);
+    it += offset;
 }
 
 void protostream_free_keyframe_iterator(HKeyframeIterator* iterator) noexcept {
