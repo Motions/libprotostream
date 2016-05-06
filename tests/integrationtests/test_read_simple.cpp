@@ -47,6 +47,10 @@ TYPED_TEST(integration_read_simple, frame_count) {
     EXPECT_EQ(TypeParam::test::frame_count, this->stream->frame_count());
 }
 
+TYPED_TEST(integration_read_simple, frames_per_keyframe) {
+    EXPECT_EQ(TypeParam::test::frames_per_keyframe, this->stream->frames_per_keyframe());
+}
+
 TYPED_TEST(integration_read_simple, keyframes) {
     auto cnt = std::size_t{0};
     for (const auto& keyframe : *this->stream) {

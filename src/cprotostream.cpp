@@ -108,3 +108,15 @@ void protostream_advance_delta_iterator(HDeltaIterator* iterator) noexcept {
 void protostream_free_delta_iterator(HDeltaIterator* iterator) noexcept {
     delete reinterpret_cast<hstream::delta_iterator*>(iterator);
 }
+
+size_t protostream_keyframe_count(HStream* stream) noexcept {
+    return reinterpret_cast<hstream*>(stream)->keyframe_count();
+}
+
+size_t protostream_frame_count(HStream* stream) noexcept {
+    return reinterpret_cast<hstream*>(stream)->frame_count();
+}
+
+uint32_t protostream_frames_per_keyframe(HStream* stream) noexcept {
+    return reinterpret_cast<hstream*>(stream)->frames_per_keyframe();
+}

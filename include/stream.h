@@ -377,6 +377,10 @@ public:
         return header_field<fields::keyframe_count>();
     }
 
+    std::uint32_t frames_per_keyframe() const {
+        return header_field<fields::frames_per_kf>();
+    }
+
 private:
     backend_type backend;
     mutable cache_type cache;

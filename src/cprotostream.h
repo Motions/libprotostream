@@ -120,6 +120,15 @@ void protostream_advance_delta_iterator(HDeltaIterator* iterator) NOEXCEPT;
 /** Frees a delta iterator */
 void protostream_free_delta_iterator(HDeltaIterator* iterator) NOEXCEPT;
 
+/** Returns the total number of keyframes in the stream */
+size_t protostream_keyframe_count(HStream* stream) NOEXCEPT;
+
+/** Returns the total number of frames in the stream */
+size_t protostream_frame_count(HStream* stream) NOEXCEPT;
+
+/** Returns the number of frames per keyframe (incl. the keyframe) */
+uint32_t protostream_frames_per_keyframe(HStream* stream) NOEXCEPT;
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
