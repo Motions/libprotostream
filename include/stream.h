@@ -419,8 +419,7 @@ private:
 };
 
 template <class... Args>
-stream<Args...>::stream(const char* path)
-    : backend{path}, cache{backend} {
+stream<Args...>::stream(const char* path) : backend{path}, cache{backend} {
     const auto file_size = backend.size();
 
     if (file_size < file_header::size) {
@@ -453,6 +452,10 @@ stream<Args...>::stream(const char* path,
                         std::size_t proto_header_size)
     : backend{path}, cache{backend} {
     auto end = file_header::size + proto_header_size;
+
+    if (backend.size() != 0) {
+        throw std::runtime_error{"File is not empty"};
+    }
 
     header_field<fields::file_size>() = end;
     header_field<fields::kf0_offset>() = end;
