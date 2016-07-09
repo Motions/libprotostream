@@ -69,7 +69,7 @@ void protostream_free_keyframe(const void*) noexcept {
 int protostream_valid_keyframe_iterator(HStream* stream, HKeyframeIterator* iterator) noexcept {
     auto stream_ptr = reinterpret_cast<hstream*>(stream);
     auto it = reinterpret_cast<hstream::keyframe_iterator*>(iterator);
-    return *it == stream_ptr->end();
+    return *it != stream_ptr->end();
 }
 
 void protostream_advance_keyframe_iterator(HKeyframeIterator* iterator, uint32_t offset) noexcept {
@@ -99,7 +99,7 @@ int protostream_valid_delta_iterator(HKeyframeIterator* keyframe,
                                      HDeltaIterator* iterator) noexcept {
     auto keyframe_ptr = reinterpret_cast<hstream::keyframe_iterator*>(keyframe);
     auto it_ptr = reinterpret_cast<hstream::delta_iterator*>(iterator);
-    return *it_ptr == (*keyframe_ptr)->end();
+    return *it_ptr != (*keyframe_ptr)->end();
 }
 
 void protostream_advance_delta_iterator(HDeltaIterator* iterator) noexcept {
